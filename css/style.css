@@ -191,6 +191,22 @@ a:hover {
   line-height: 1.8;
 }
 
+.hero__availability {
+  max-width: 560px;
+  margin: 0 auto var(--spacing-md);
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--color-teal-pale);
+  border-left: 3px solid var(--color-teal);
+  border-radius: 4px;
+  font-size: 0.95rem;
+  color: var(--color-text);
+  line-height: 1.7;
+}
+
+.hero__availability a {
+  font-weight: 600;
+}
+
 /* --- Social Links --- */
 .social-links {
   display: flex;
