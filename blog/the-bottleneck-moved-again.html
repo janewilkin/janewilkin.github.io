@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Five Reviewers, Three Advisors, One Leader: How I Taught Claude to Plan - Jane Wilkin</title>
+  <meta name="description" content="When AI agents handle coordination, the bottleneck moves to planning. How I built a role-based review system that turns eight different perspectives into a prioritized backlog, and what forty-six sprints taught me about the shape of the work.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+  <nav class="site-nav">
+    <div class="container container--wide">
+      <a href="/" class="site-nav__name">Jane Wilkin</a>
+      <ul class="site-nav__links">
+        <li><a href="/">Home</a></li>
+        <li><a href="/blog/" class="active">Writing</a></li>
+        <li><a href="/recommendations/">Recommendations</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <main>
+    <article>
+      <div class="article-header">
+        <div class="container">
+          <a href="/blog/" class="article-header__back">&larr; Back to all articles</a>
+          <h1>Five Reviewers, Three Advisors, One Leader: How I Taught Claude to Plan</h1>
+          <div class="article-header__meta">
+            <time>February 2026</time>
+            <span>&middot;</span>
+            <span>14 min read</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="article-body">
+        <div class="container">
+          <p>At the end of my last article, I described a problem I hadn’t solved: the project’s trajectory drifting because agents were adding their own next steps to the backlog. I came back from a break to find three agents had quietly shifted the queue from feature work to error-handling hardening. The coordination was working. The agents weren’t stepping on each other. But they were collectively moving in a direction I hadn’t chosen.</p>
+
+          <p>The bottleneck had moved again. Not from implementation to coordination this time, but from coordination to planning. I could get six agents to work in parallel without conflicts. What I couldn’t do was ensure they were working on the right things.</p>
+
+          <p>I expected the hard problems to be technical: context window limits, merge conflicts, version collisions. Those problems exist, and I built tooling to handle them. But the problem that actually slowed me down was one I recognized from twenty years of leading teams: how do you see the shape of the work? How do you know whether your backlog reflects what the project actually needs, rather than what was easiest to notice?</p>
+
+          <p>I spent the next few weeks building a system to attack that problem.</p>
+
+          <h2>The Flat File</h2>
+
+          <p>The entire backlog for the project lives in a single markdown file called NEXT-STEPS.md. It’s been through forty-six sprints. Every task is a checkbox with a role tag, a description, context for why it matters, the files it touches, and its priority:</p>
+
+
+<pre><code>- [ ] **[data] Add geographic tagging to ArticleRecord** -- Add optional
+  state_or_jurisdiction and geographic_tags fields to ArticleRecord.
+  Update analysis prompts to extract state/jurisdiction from article
+  content when identifiable.
+  - Files: src/trans_disco/models.py, src/trans_disco/analysis/prompts.py
+  - Priority: high (blocks geographic analysis and state-level trend mapping)
+  - Dependencies: data cascade (Phase 3) for index rebuild
+</code></pre>
+
+          <p>The project is <a href="https://github.com/janewilkin/trans-disco" target="_blank" rel="noopener">Trans Discourse</a>, a platform that curates and presents the work of trans scholars, activists, medical professionals, and advocates. It discovers anti-trans media content, analyzes it for logical fallacies and misinformation tropes, and publishes graded analyses on a static website. Every output gives credit to the trans people who have written, spoken, and led the movement. The platform is a curator and presenter, not a source.</p>
+
+          <p>I built this entire workflow on a flat markdown file because the project’s own guiding principle is “don’t optimize early.” A kanban board would be better at scale. A proper issue tracker would give me better filtering and search. But NEXT-STEPS.md hasn’t become the bottleneck yet. It’s thirty thousand tokens long and growing, but Claude can read the whole thing in a single pass. When the flat file stops working, I’ll migrate. Until then, it’s one file, version-controlled, readable by humans and agents alike.</p>
+
+          <p>The problem wasn’t the format. It was what went into it.</p>
+
+          <h2>Five Ways to Read the Same Code</h2>
+
+          <p>When I ran a single <code>/review</code> command, I got a shallow pass over everything. A little bit about test coverage, a little about accessibility, a little about security. The findings were technically correct but not very useful. It’s the same problem you get when you ask one person to review a pull request that touches the data model, the UI, the API, and the deployment config. They’ll catch the obvious things. They’ll miss the things that require deep attention to one dimension.</p>
+
+          <p>So I split the review into five specialized roles, each with its own skill definition, its own review process, and its own task format.</p>
+
+          <p>The <strong>steward</strong> protects long-term codebase health: tests, type safety, architectural boundaries, technical debt. I modeled it on the best tech lead I worked with at TIBCO, someone who would catch schema inconsistencies and migration risks in a code review while the rest of us were focused on feature logic. The steward checks the things that person would have caught.</p>
+
+          <p>The <strong>designer</strong> and <strong>editor</strong> work opposite ends of the same pipeline. The designer evaluates structure: site navigation, template quality, responsive layout, audience-specific entry points. The editor evaluates content: prose voice, terminology (“transgender” as an adjective, never “transgendered”), reading level, citation accuracy. A missing field on the data model means one thing to the designer (a gap in filtering and search) and something entirely different to the editor (context that never reaches the reader).</p>
+
+          <p>The <strong>advocate</strong> protects the communities the project serves, especially the most marginalized. I built this role because technology systems typically leave out disabled people, and I’ve seen enough times that when you design for accessibility, the result usually helps everyone access, process, or understand the content more fully. The advocate audits for identity exposure, screen reader support, low-bandwidth usability, intersectional representation, and harm reduction.</p>
+
+          <p>The <strong>security</strong> reviewer is the most project-specific of the five. Since the project processes untrusted article content through AI analysis pipelines, the threat model centers on prompt injection and content poisoning: can article content manipulate the analysis? Can internal data leak through published outputs?</p>
+
+          <p>Sometimes the five roles found the same gap from different angles. The same missing feature looked like a technical debt item to the steward, a usability gap to the designer, and a safety issue to the advocate. Same gap, different reasons it mattered, different implications for how to implement the fix. That distinction turned out to matter more than any individual finding.</p>
+
+          <h2>The Counsel</h2>
+
+          <p>The five roles I described are all code reviewers. They look at the codebase and evaluate what’s there. But the project also needs domain expertise that isn’t about code quality at all. It’s about whether the project is effective at its mission.</p>
+
+          <p>I added three domain advisory roles that I think of as the counsel. They don’t review code. They review the project’s fitness for purpose.</p>
+
+          <p>The <strong>data analyst</strong> evaluates whether the data model and schemas support the analytical questions the project needs to answer. Can we track trope co-occurrence? Can we map geographic distribution? Are cross-record linkages complete enough for network analysis? The data analyst works within the constraint of the project’s JSON file-based datastore and doesn’t recommend migration. It finds gaps in what the data can tell us.</p>
+
+          <p>The <strong>legislative strategist</strong> evaluates coverage of the US legislative landscape. Which categories of anti-trans legislation are represented in the trope catalog? Do the rebuttals address specific legislative claims? Are the major bill-drafting organizations tracked? This role identifies gaps like: the project covers healthcare bans well but has thin coverage of parental rights legislation and “bounty” enforcement mechanisms.</p>
+
+          <p>The <strong>medical advocate</strong> evaluates the quality of medical evidence presentation. Are citations peer-reviewed? Are claims about HRT safety, surgical outcomes, youth care, and medical consensus supported by current research? Are trans medical professionals represented among the cited voices?</p>
+
+          <p>These three roles are entirely project-specific. Another project would have different counsel roles – a fintech project might need a compliance analyst and a fraud specialist, a healthcare project might need a clinical workflow expert and a HIPAA reviewer. The pattern is general: domain expertise encoded as a skill definition that an AI agent can execute consistently. The specific expertise is determined by what the project needs.</p>
+
+          <p>What makes the counsel different from the code reviews is the altitude. The steward asks “is this code healthy?” The data analyst asks “can this system answer the questions it needs to answer?”</p>
+
+          <h2>The Leader</h2>
+
+          <p>Having eight roles generating findings is useful. Having eight roles generating findings with no synthesis is chaos.</p>
+
+          <p>The leader skill orchestrates everything. When I run <code>/leader review</code>, it dispatches all five code review roles in parallel, collects their findings, and then does the hard part: deduplication, conflict resolution, and prioritization. A full review takes five to ten minutes. On the Claude Max plan, it barely registers on the usage meter. I stopped tracking the cost after upgrading to the 20x tier because I haven’t been able to hit that ceiling yet.</p>
+
+          <p>Deduplication is where the value compounds. A missing geographic field on the article data model showed up in four separate reviews: the steward flagged it as a schema gap, the designer wanted it for map-based navigation, the data analyst needed it for trend analysis, and the legislative strategist needed it for state-level bill tracking. Four findings, one implementation, four different rationales that matter when you sit down to build it. The leader merges them into a single task, preserving all four.</p>
+
+          <p>Conflict resolution requires judgment. What happens when the steward says “keep templates minimal for maintainability” and the designer says “add rich navigation for usability”? Or when the editor says “keep prose clean and flowing” and the advocate says “add content warnings before graphic material”?</p>
+
+          <p>I encoded a resolution framework:</p>
+
+          <ul>
+          <li>Safety always wins. When the advocate identifies a harm reduction concern, it overrides aesthetic or simplicity preferences.</li>
+          <li>Values alignment wins. Tasks that support the project’s guiding principle (attribution, representation, centering trans voices) rank higher than pure technical improvements.</li>
+          <li>User impact breaks ties. When two tasks are otherwise equal, prefer the one that affects the end user.</li>
+          <li>Ask the human when genuinely ambiguous.</li>
+          </ul>
+
+          <p>The full review, <code>/leader review --full</code>, adds the three counsel roles. This creates a second layer of synthesis where code-level findings and domain-level findings converge. The geographic field is a good example: code review saw a schema gap and a navigation gap, domain review saw analytical and strategic needs, and the leader recognized all of these as one task.</p>
+
+          <p>After synthesis, the leader presents a prioritized task list organized by urgency:</p>
+
+          <ul>
+          <li><strong>High priority</strong>: Safety issues, broken functionality, values violations, work that blocks other tasks.</li>
+          <li><strong>Medium priority</strong>: UX improvements, quality gaps, representation expansion, technical debt.</li>
+          <li><strong>Low priority</strong>: Polish, optimization, future considerations.</li>
+          </ul>
+
+          <p>Every task carries its role tag, so I can see not just what needs doing but which perspective identified it. And the leader waits for my approval before writing anything to NEXT-STEPS.md.</p>
+
+          <p>This is what a tech lead does. Reading multiple inputs, understanding the tradeoffs, making judgment calls about priority, presenting a coherent plan. I encoded that judgment into a skill definition. Not perfectly. The resolution framework is a set of heuristics, not an algorithm. But it’s consistent, it’s fast, and it surfaces conflicts I would have missed doing one review at a time.</p>
+
+          <h2>What the Flat File Tells You</h2>
+
+          <p>After a leader review, NEXT-STEPS.md doesn’t just have a list of tasks. It has a list of tasks tagged by the perspective that generated them. And that structure reveals the shape of the backlog.</p>
+
+          <p>When the backlog is heavy on <code>[steward]</code> tags, the project needs infrastructure work. When it’s heavy on <code>[designer]</code> tags, there’s a UX debt building up. When <code>[advocate]</code> tags dominate, the project is falling behind on safety and accessibility. When <code>[legislative]</code> and <code>[medical]</code> tags appear, the domain model needs to catch up with the real world.</p>
+
+          <p>This is exactly the visibility problem I described at the end of article one. The flat file gives you a list. The role tags give you the contour. I can scan the backlog and see immediately whether the project is balanced or tilted. Not by reading every task, but by looking at the distribution of perspectives.</p>
+
+          <p>It also catches the drift problem. When agents were adding their own next steps, they tended to generate <code>[steward]</code>-type tasks: hardening, error handling, edge cases. Useful work, but not what the project needed at that moment. The leader review rebalances by bringing in perspectives the agents wouldn’t generate on their own. The designer notices that the article review pages lack version history timelines. The advocate notices that the resource guides aren’t accessible at low bandwidth. The legislative strategist notices that an entire category of legislation has gone untracked.</p>
+
+          <p>None of those findings would have emerged from agents independently deciding what to work on next. They require someone (or something) to deliberately adopt a different point of view.</p>
+
+          <h2>Forty-Six Sprints</h2>
+
+          <p>I’ve been running this system long enough to see the trajectory it produces. The project has been through forty-six sprints, and the distribution of work tells its own story.</p>
+
+          <p>The early sprints were almost entirely infrastructure. Sprint after sprint of <code>[steward]</code> work: setting up the data pipeline, building the analysis engine, establishing the store patterns, writing tests. This is what every project looks like at the beginning. You’re building the foundation.</p>
+
+          <p>The middle sprints shifted toward content and user experience. More <code>[designer]</code> and <code>[editor]</code> tags. Template systems, navigation, audience-specific entry points, prose quality in the AI-generated analyses. The data model got geographic tagging, trope co-occurrence tracking, cross-reference indexes. <code>[data]</code> and <code>[legislative]</code> tasks started appearing as the counsel roles identified gaps between the system’s capabilities and its mission.</p>
+
+          <p>The later sprints show operational maturity. <code>[security]</code> reviews of the prompt injection surface. <code>[advocate]</code> audits of accessibility and representation. <code>[medical]</code> reviews of citation quality and evidence recency. The project’s concerns are broadening as the core functionality stabilizes.</p>
+
+          <p>I didn’t plan this trajectory, and I wouldn’t call it purely emergent either. The review system finds what it’s built to find. The steward naturally surfaces more work in an immature codebase. The designer finds more work once templates exist. The counsel roles find more work once there’s enough content to evaluate. The trajectory reflects the design of the roles as much as the state of the project.</p>
+
+          <p>But the result, looking back, resembles a planned roadmap more than I would have predicted. Each round of reviews found the most important gaps given the project’s current state, and the leader prioritized them. Infrastructure gave way to features, features gave way to operations. The review system didn’t replace planning. It made planning continuous and responsive instead of speculative and fixed.</p>
+
+          <h2>The Pattern</h2>
+
+          <p>I want to step back and look at what’s happening from a distance.</p>
+
+          <p>Article one was about coordination. The bottleneck moved from implementation to managing multiple agents working in parallel. I solved it with a work queue, claim locks, worktrees, and a shipping pipeline.</p>
+
+          <p>This article is about planning. The bottleneck moved from coordination to seeing the shape of the work and ensuring the backlog reflects what the project actually needs. I solved it with specialized review roles, domain counsel, and a leader that synthesizes and prioritizes.</p>
+
+          <p>This pattern – solving one bottleneck to reveal the next – isn’t new. The software industry has cycled through it for decades: waterfall, agile, CI/CD, DevOps, each one dissolving a constraint and exposing the next. The analogy is rough. Those were industry-wide shifts across thousands of organizations over years. What I’m describing is one person adjusting their workflow on one project over weeks. But the sequence of bottlenecks is the same, and the compression is real.</p>
+
+          <p>When you can run six agents in parallel and ship multiple features in a day, you hit the next constraint fast. The cycle time between “identify a problem” and “ship a solution” drops from weeks to hours, and you stop planning in quarters and start planning in iterations. The review system I built isn’t a quarterly planning exercise. It’s something I run every few sprints to recalibrate.</p>
+
+          <p>This is also why the flat file still works. When your planning cycle is measured in days, you don’t need a sophisticated project management tool. You need something that’s fast to read, fast to update, and version-controlled. NEXT-STEPS.md meets all three requirements. The moment it stops meeting them, I’ll migrate. But the review system that populates it will remain the same regardless of the container.</p>
+
+          <h2>What’s Next</h2>
+
+          <p>The role-based review system works because someone encoded the perspectives. Each skill definition is a compression of expertise: what a steward cares about, how a designer evaluates navigation, what a legislative strategist looks for in the trope catalog. The leader’s conflict resolution framework is a compression of the judgment calls a tech lead makes every day.</p>
+
+          <p>But that encoding is itself a kind of institutional knowledge. It took me time to identify the right roles, to calibrate their review processes, to build the conflict resolution framework. The system didn’t arrive fully formed. It evolved through use, same as the coordination template did.</p>
+
+          <p>I’ve started noticing that the most valuable work I do now isn’t specifying features or reviewing code. It’s refining the role definitions, adjusting the resolution framework, adding new counsel roles when the domain shifts. It’s the work of encoding perspective so that agents can apply it consistently.</p>
+
+          <p>That is a different kind of work. It’s not implementation, coordination, or even planning, exactly. It’s closer to what an organization does when it captures institutional knowledge: defining what expertise looks like, what good judgment means, what the priorities should be when priorities conflict. I built this for a solo workflow, but the pattern – specialized perspectives feeding a synthesis layer – is the same thing I’ve seen work on human teams with human reviewers, just slower.</p>
+
+          <p>I am starting to think of it as counsel. Not the noun I used for the domain advisory roles, but the verb. The act of encoding wisdom so it can be consulted. And I think that’s where the bottleneck is heading next.</p>
+        </div>
+      </div>
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div class="site-footer__links">
+        <a href="https://www.linkedin.com/in/janewilkin/" target="_blank" rel="noopener">LinkedIn</a>
+        <a href="https://github.com/janewilkin" target="_blank" rel="noopener">GitHub</a>
+        <a href="mailto:jane@janewilkin.dev">Email</a>
+      </div>
+      <p>&copy; 2026 Jane Wilkin</p>
+    </div>
+  </footer>
+
+</body>
+</html>
+
