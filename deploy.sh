@@ -24,6 +24,15 @@ NC='\033[0m' # No Color
 echo -e "${GREEN}Deploying janewilkin.github.io${NC}"
 echo "=================================="
 
+# Build articles from markdown sources
+echo "Building articles..."
+if [ -d ".venv" ]; then
+  .venv/bin/python build.py
+else
+  python3 build.py
+fi
+echo ""
+
 # Check for uncommitted changes
 if git diff --quiet && git diff --cached --quiet && [ -z "$(git ls-files --others --exclude-standard)" ]; then
   echo -e "${YELLOW}No changes to deploy.${NC}"
