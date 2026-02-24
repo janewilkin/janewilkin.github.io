@@ -133,7 +133,7 @@ The claim system handles the "don't pick up the same task" problem. When an agen
 }
 ```
 
-Before claiming a task, the agent checks for existing claims. If another worktree already owns that task, the agent moves on to the next unclaimed item. Claims have a TTL (time to live) of 120 minutes by default, so if an agent crashes or gets abandoned, its claims expire and other agents can pick the work back up.
+Before claiming a task, the agent checks for existing claims. If another worktree already owns that task, the agent moves on to the next unclaimed item. The claiming process itself uses `mkdir`-based atomic locking to prevent two agents from grabbing the same task simultaneously, with staleness detection so a crashed lock doesn't block the queue. Claims have a TTL (time to live) of 120 minutes by default, so if an agent crashes or gets abandoned, its claims expire and other agents can pick the work back up.
 
 The `speculated_version` field is worth explaining. When two agents are working in parallel and both need to bump the project version when they ship, they'd naturally both pick the same next version number. The claim system avoids this by having each agent check the highest speculated version across all active claims and increment from there. It's advisory, not enforced. The actual version is determined at ship time. But it prevents the common collision where two agents both target version 0.18.0.
 
@@ -144,6 +144,55 @@ All of this lives in a single bash script, `scripts/work-queue.sh`, that handles
 ## The Claim-to-Ship Pipeline
 
 The full workflow ties the pieces together. It starts with `/claim-tasks`, which reads a NEXT-STEPS.md file (the project's task list), filters out completed and already-claimed work, and claims a batch of unclaimed tasks. If you're on the main branch, it automatically creates a fresh worktree first.
+
+Here's what it looks like when a sixth agent claims a task while five others are already working:
+
+```
+═══════════════════════════════════════════════════
+              TASKS CLAIMED
+═══════════════════════════════════════════════════
+
+Worktree: dapper-drifting-melody
+Claimed: 1 task | Skipped: 0 (claimed) | In-flight: 0 (open PRs)
+Speculated version: 0.23.0 (minor)
+
+───────────────────────────────────────────────────
+YOUR TASKS
+───────────────────────────────────────────────────
+
+1. [legislative] Add optional legislation_refs field to ArticleRecord
+   Section: Medium Priority
+   Files: src/trans_disco/models.py, src/trans_disco/analysis/prompts.py
+
+───────────────────────────────────────────────────
+CLAIMED BY OTHERS
+───────────────────────────────────────────────────
+
+snappy-rolling-sifakis (v0.22.0):
+  - [data] Add geographic tagging to ArticleRecord (3 min ago)
+
+snuggly-purring-quail (v0.21.1):
+  - [designer] Add version history timeline to article review pages (3 min ago)
+
+bright-coalescing-riddle (v0.21.0):
+  - [steward] Build data integrity validator (6 min ago)
+
+mossy-tickling-stroustrup (v0.21.0):
+  - [steward] Build post-processing data cascade (6 min ago)
+
+calm-noodling-beacon (v0.21.0):
+  - [data] Build precomputed index files for cross-reference queries (5 min ago)
+
+───────────────────────────────────────────────────
+IN-FLIGHT (OPEN PRs)
+───────────────────────────────────────────────────
+
+  (none)
+
+═══════════════════════════════════════════════════
+```
+
+Each worktree gets an auto-generated name. The output shows which agent owns which task, what version they're targeting, and whether any finished work is still sitting in open pull requests. The version speculation is visible here: agents claimed versions 0.21.0 through 0.23.0, each incrementing from the highest existing claim at the time they started.
 
 Then you (or the agent) work on the claimed tasks. Auto-linting runs after every file edit via a hook. The work is isolated in the worktree's branch.
 
@@ -210,7 +259,7 @@ The part I haven't solved well yet is visibility. Each agent works from a NEXT-S
 
 I have skills like `/docs` that I run every few iterations to make sure the documentation stays current with the code. But the bigger question, "where is this project actually heading?", is harder to answer from a flat markdown file. I can see the next steps. I can't easily see the shape of the work. That's the bottleneck I'm hitting now: not coordination of agents, but visualization of progress and trajectory. I suspect this is the kind of problem that will eventually be solved by better tooling, but right now it's a manual review process.
 
-There are other rough edges. The work queue is a bash script, not a database, so it doesn't handle truly concurrent writes gracefully. The version speculation is advisory and can still collide in edge cases. The claim system assumes agents are honest about their identity, which works when you control all the agents but wouldn't survive an adversarial environment. These are acceptable tradeoffs for personal projects, but they're worth naming.
+There are other rough edges. The version speculation is advisory and can still collide in edge cases. The claim system assumes agents are honest about their identity, which works when you control all the agents but wouldn't survive an adversarial environment. These are acceptable tradeoffs for personal projects, but they're worth naming.
 
 ## The New Dotfiles
 
