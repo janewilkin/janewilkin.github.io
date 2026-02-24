@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>The Bottleneck Moved - Jane Wilkin</title>
+  <title>Six Agents, One Codebase: Coordination Patterns from Human Teams - Jane Wilkin</title>
   <meta name="description" content="When Claude Code handles implementation, the bottleneck moves to coordination. How I built a sharable template for managing multiple AI agents, drawing on patterns from human software teams.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -28,7 +28,7 @@
       <div class="article-header">
         <div class="container">
           <a href="/blog/" class="article-header__back">&larr; Back to all articles</a>
-          <h1>The Bottleneck Moved</h1>
+          <h1>Six Agents, One Codebase: Coordination Patterns from Human Teams</h1>
           <div class="article-header__meta">
             <time>February 2026</time>
             <span>&middot;</span>
@@ -166,7 +166,7 @@ allowed-tools: Read, Glob, Grep, Edit, Bash(git *),
 }
 </code></pre>
 
-          <p>Before claiming a task, the agent checks for existing claims. If another worktree already owns that task, the agent moves on to the next unclaimed item. Claims have a TTL (time to live) of 120 minutes by default, so if an agent crashes or gets abandoned, its claims expire and other agents can pick the work back up.</p>
+          <p>Before claiming a task, the agent checks for existing claims. If another worktree already owns that task, the agent moves on to the next unclaimed item. The claiming process itself uses <code>mkdir</code>-based atomic locking to prevent two agents from grabbing the same task simultaneously, with staleness detection so a crashed lock doesn’t block the queue. Claims have a TTL (time to live) of 120 minutes by default, so if an agent crashes or gets abandoned, its claims expire and other agents can pick the work back up.</p>
 
           <p>The <code>speculated_version</code> field is worth explaining. When two agents are working in parallel and both need to bump the project version when they ship, they’d naturally both pick the same next version number. The claim system avoids this by having each agent check the highest speculated version across all active claims and increment from there. It’s advisory, not enforced. The actual version is determined at ship time. But it prevents the common collision where two agents both target version 0.18.0.</p>
 
@@ -177,6 +177,43 @@ allowed-tools: Read, Glob, Grep, Edit, Bash(git *),
           <h2>The Claim-to-Ship Pipeline</h2>
 
           <p>The full workflow ties the pieces together. It starts with <code>/claim-tasks</code>, which reads a NEXT-STEPS.md file (the project’s task list), filters out completed and already-claimed work, and claims a batch of unclaimed tasks. If you’re on the main branch, it automatically creates a fresh worktree first.</p>
+
+          <p>Here’s what it looks like when a sixth agent claims a task while five others are already working:</p>
+
+
+<pre><code>═══════════════════════════════════════════════════
+              TASKS CLAIMED
+═══════════════════════════════════════════════════
+Worktree: dapper-drifting-melody
+Claimed: 1 task | Skipped: 0 (claimed) | In-flight: 0 (open PRs)
+Speculated version: 0.23.0 (minor)
+───────────────────────────────────────────────────
+YOUR TASKS
+───────────────────────────────────────────────────
+1. [legislative] Add optional legislation_refs field to ArticleRecord
+   Section: Medium Priority
+   Files: src/trans_disco/models.py, src/trans_disco/analysis/prompts.py
+───────────────────────────────────────────────────
+CLAIMED BY OTHERS
+───────────────────────────────────────────────────
+snappy-rolling-sifakis (v0.22.0):
+  - [data] Add geographic tagging to ArticleRecord (3 min ago)
+snuggly-purring-quail (v0.21.1):
+  - [designer] Add version history timeline to article review pages (3 min ago)
+bright-coalescing-riddle (v0.21.0):
+  - [steward] Build data integrity validator (6 min ago)
+mossy-tickling-stroustrup (v0.21.0):
+  - [steward] Build post-processing data cascade (6 min ago)
+calm-noodling-beacon (v0.21.0):
+  - [data] Build precomputed index files for cross-reference queries (5 min ago)
+───────────────────────────────────────────────────
+IN-FLIGHT (OPEN PRs)
+───────────────────────────────────────────────────
+  (none)
+═══════════════════════════════════════════════════
+</code></pre>
+
+          <p>Each worktree gets an auto-generated name. The output shows which agent owns which task, what version they’re targeting, and whether any finished work is still sitting in open pull requests. The version speculation is visible here: agents claimed versions 0.21.0 through 0.23.0, each incrementing from the highest existing claim at the time they started.</p>
 
           <p>Then you (or the agent) work on the claimed tasks. Auto-linting runs after every file edit via a hook. The work is isolated in the worktree’s branch.</p>
 
@@ -236,7 +273,7 @@ SYNC LOCAL
 
           <p>I have skills like <code>/docs</code> that I run every few iterations to make sure the documentation stays current with the code. But the bigger question, “where is this project actually heading?”, is harder to answer from a flat markdown file. I can see the next steps. I can’t easily see the shape of the work. That’s the bottleneck I’m hitting now: not coordination of agents, but visualization of progress and trajectory. I suspect this is the kind of problem that will eventually be solved by better tooling, but right now it’s a manual review process.</p>
 
-          <p>There are other rough edges. The work queue is a bash script, not a database, so it doesn’t handle truly concurrent writes gracefully. The version speculation is advisory and can still collide in edge cases. The claim system assumes agents are honest about their identity, which works when you control all the agents but wouldn’t survive an adversarial environment. These are acceptable tradeoffs for personal projects, but they’re worth naming.</p>
+          <p>There are other rough edges. The version speculation is advisory and can still collide in edge cases. The claim system assumes agents are honest about their identity, which works when you control all the agents but wouldn’t survive an adversarial environment. These are acceptable tradeoffs for personal projects, but they’re worth naming.</p>
 
           <h2>The New Dotfiles</h2>
 
@@ -247,6 +284,8 @@ SYNC LOCAL
           <p>The template I’ve been building is my contribution to that conversation. It’s opinionated, it reflects the way I work, and it will keep evolving as I learn more. If you’re working with Claude Code and thinking about multi-agent workflows, the <a href="https://github.com/janewilkin/claude-project-template" target="_blank" rel="noopener">repository is public</a> and I’d be curious to hear what patterns you’ve found.</p>
 
           <p>Last week I watched an agent misidentify its own worktree, try to release another agent’s claims, and fail gracefully because of a guard I’d added two days earlier. I didn’t write that guard because I anticipated the problem. I wrote it because I’d seen the same class of failure before, in a different system, with human operators. Twenty years of watching things go wrong in production turns out to be useful preparation for watching things go wrong with agents. The tools changed. The failure modes didn’t.</p>
+
+          <p>Since publishing this, I’ve been working on the planning and specification problem I mentioned in “Where It Gets Hard.” The visibility issue, the backlog drift, the difficulty of seeing the shape of the work. I built a role-based review system that attacks it from eight different perspectives simultaneously, and I wrote about how it works in <a href="/blog/the-bottleneck-moved-again.html">Five Reviewers, Three Advisors, One Leader: How I Taught Claude to Plan</a>.</p>
         </div>
       </div>
     </article>

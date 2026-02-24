@@ -1,5 +1,5 @@
 ---
-title: The Bottleneck Moved
+title: "Six Agents, One Codebase: Coordination Patterns from Human Teams"
 date: February 2026
 reading_time: 18 min read
 description: >-
@@ -270,3 +270,5 @@ I'm starting to see the same thing happen with Claude Code configurations. Peopl
 The template I've been building is my contribution to that conversation. It's opinionated, it reflects the way I work, and it will keep evolving as I learn more. If you're working with Claude Code and thinking about multi-agent workflows, the [repository is public](https://github.com/janewilkin/claude-project-template) and I'd be curious to hear what patterns you've found.
 
 Last week I watched an agent misidentify its own worktree, try to release another agent's claims, and fail gracefully because of a guard I'd added two days earlier. I didn't write that guard because I anticipated the problem. I wrote it because I'd seen the same class of failure before, in a different system, with human operators. Twenty years of watching things go wrong in production turns out to be useful preparation for watching things go wrong with agents. The tools changed. The failure modes didn't.
+
+Since publishing this, I've been working on the planning and specification problem I mentioned in "Where It Gets Hard." The visibility issue, the backlog drift, the difficulty of seeing the shape of the work. I built a role-based review system that attacks it from eight different perspectives simultaneously, and I wrote about how it works in [Five Reviewers, Three Advisors, One Leader: How I Taught Claude to Plan](/blog/the-bottleneck-moved-again.html).
