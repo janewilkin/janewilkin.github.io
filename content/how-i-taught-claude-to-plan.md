@@ -9,7 +9,7 @@ description: >-
   taught me about the shape of the work.
 ---
 
-At the end of my last article, I described a problem I hadn't solved: the project's trajectory drifting because agents were adding their own next steps to the backlog. I came back from a break to find three agents had quietly shifted the queue from feature work to error-handling hardening. The coordination was working. The agents weren't stepping on each other. But they were collectively moving in a direction I hadn't chosen.
+At the end of my last article, I described a problem I hadn't solved: the project's trajectory drifting because agents were adding their own next steps to the backlog. The coordination was working. The agents weren't stepping on each other. But the backlog itself was gradually shifting in directions I hadn't chosen.
 
 The bottleneck had moved again. Not from implementation to coordination this time, but from coordination to planning. I could get six agents to work in parallel without conflicts. What I couldn't do was ensure they were working on the right things.
 
@@ -149,3 +149,9 @@ I've started noticing that the most valuable work I do now isn't specifying feat
 That is a different kind of work. It's not implementation, coordination, or even planning, exactly. It's closer to what an organization does when it captures institutional knowledge: defining what expertise looks like, what good judgment means, what the priorities should be when priorities conflict. I built this for a solo workflow, but the pattern -- specialized perspectives feeding a synthesis layer -- is the same thing I've seen work on human teams with human reviewers, just slower.
 
 I am starting to think of it as counsel. Not the noun I used for the domain advisory roles, but the verb. The act of encoding wisdom so it can be consulted. And I think that's where the bottleneck is heading next.
+
+---
+
+*This article was generated with the assistance of AI and has been reviewed for factual correctness and accuracy.*
+
+*If you're interested in working together, reach out at [jane@janewilkin.dev](mailto:jane@janewilkin.dev).*

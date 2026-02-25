@@ -61,3 +61,7 @@ The technical design of the migration mattered. But what made it repeatable wasn
 I'd spent most of my career thinking of myself as a coder. Someone who writes software, understands systems, solves technical problems. And I do those things. But the work that made the biggest difference here wasn't writing code. It was seeing what the organization had learned to live with, building the case for changing it, and documenting it well enough that I didn't need to be in the room next time.
 
 The fourth migration went smoothly and nobody thought twice about it. That's the result I'm most proud of.
+
+---
+
+*If you're interested in working together, reach out at [jane@janewilkin.dev](mailto:jane@janewilkin.dev).*

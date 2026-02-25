@@ -255,7 +255,7 @@ The other thing I learned is that the skills and configuration files are doing s
 
 ## Where It Gets Hard
 
-The part I haven't solved well yet is visibility. Each agent works from a NEXT-STEPS.md file that lists what needs doing. The agents can generate next steps too, which is useful for keeping momentum, but it creates a new problem: the project's trajectory starts to drift unless I'm reviewing the queue regularly. I came back from a break once to find that three agents had each added next steps around error handling edge cases, and the queue had quietly shifted from feature work to hardening work that wasn't what I needed yet. With four to six agents shipping changes, the project can move fast in a direction I didn't intend if I'm not paying attention to what they're adding to the backlog.
+The part I haven't solved well yet is visibility. Each agent works from a NEXT-STEPS.md file that lists what needs doing. The agents can generate next steps too, which is useful for keeping momentum, but it creates a new problem: the project's trajectory starts to drift unless I'm reviewing the queue regularly. With four to six agents shipping changes, the project can move fast in a direction I didn't intend if I'm not paying attention to what they're adding to the backlog.
 
 I have skills like `/docs` that I run every few iterations to make sure the documentation stays current with the code. But the bigger question, "where is this project actually heading?", is harder to answer from a flat markdown file. I can see the next steps. I can't easily see the shape of the work. That's the bottleneck I'm hitting now: not coordination of agents, but visualization of progress and trajectory. I suspect this is the kind of problem that will eventually be solved by better tooling, but right now it's a manual review process.
 
@@ -271,4 +271,8 @@ The template I've been building is my contribution to that conversation. It's op
 
 Last week I watched an agent misidentify its own worktree, try to release another agent's claims, and fail gracefully because of a guard I'd added two days earlier. I didn't write that guard because I anticipated the problem. I wrote it because I'd seen the same class of failure before, in a different system, with human operators. Twenty years of watching things go wrong in production turns out to be useful preparation for watching things go wrong with agents. The tools changed. The failure modes didn't.
 
-Since publishing this, I've been working on the planning and specification problem I mentioned in "Where It Gets Hard." The visibility issue, the backlog drift, the difficulty of seeing the shape of the work. I built a role-based review system that attacks it from eight different perspectives simultaneously, and I wrote about how it works in [Five Reviewers, Three Advisors, One Leader: How I Taught Claude to Plan](/blog/the-bottleneck-moved-again.html).
+Since publishing this, I've been working on the planning and specification problem I mentioned in "Where It Gets Hard." The visibility issue, the backlog drift, the difficulty of seeing the shape of the work. I built a role-based review system that attacks it from eight different perspectives simultaneously, and I wrote about how it works in [Five Reviewers, Three Advisors, One Leader: How I Taught Claude to Plan](/blog/how-i-taught-claude-to-plan.html).
+
+---
+
+*If you're interested in working together, reach out at [jane@janewilkin.dev](mailto:jane@janewilkin.dev).*
