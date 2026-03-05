@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>From Content Analyzer to Policy Research Platform: Building Trans Discourse - Jane Wilkin</title>
+  <meta name="description" content="The project behind the workflow articles. How a tool for analyzing anti-trans media evolved into a policy research platform tracking legislation, organizational influence, and contested research, all built with Claude in 26 days.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+  <nav class="site-nav">
+    <div class="container container--wide">
+      <a href="/" class="site-nav__name">Jane Wilkin</a>
+      <ul class="site-nav__links">
+        <li><a href="/">Home</a></li>
+        <li><a href="/blog/" class="active">Writing</a></li>
+        <li><a href="/recommendations/">Recommendations</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <main>
+    
+    <article>
+      <div class="article-header">
+        <div class="container">
+          <a href="/blog/" class="article-header__back">&larr; Back to all articles</a>
+          <h1>From Content Analyzer to Policy Research Platform: Building Trans Discourse</h1>
+          <div class="article-header__meta">
+            <time>March 2026</time>
+            <span>&middot;</span>
+            <span>16 min read</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="article-body">
+        <div class="container">
+
+
+          <p>The previous three articles in this series described the workflow: coordinating multiple Claude agents, building a role-based planning system, solving merge conflicts at scale. Each article referenced the project those tools were built for, but the project itself was always in the background.</p>
+          <p>This is the project.</p>
+          <p><a href="https://github.com/bismuthdigital/trans-disco">Trans Discourse</a> is a policy research platform that curates and presents the work of trans scholars, activists, medical professionals, and advocates. It discovers media content about transgender issues, analyzes it for logical fallacies and misinformation tropes, tracks related legislation across US jurisdictions, and maps organizational influence chains. Every output credits the trans people whose research and advocacy informed the analysis.</p>
+          <p>The platform is a curator and presenter, not a source. It doesn't produce original research or make editorial claims. It maps connections between media narratives, legislative activity, organizational funding, and contested research, and it lets the evidence speak for itself.</p>
+          <p>I built it with Claude over 26 days. Here's how it evolved.</p>
+          <h2>Day One</h2>
+          <p>On February 7th, I created the repository from the <a href="https://github.com/bismuthdigital/claude-project-template">Claude project template</a> I'd been iterating on. By the end of that day, the project had a working article analysis pipeline, a static site generator, a corrections system, an article submission intake pipeline, automated discovery from RSS feeds and Google Alerts, a CLI, structured logging, and integration tests.</p>
+          <p>The early commit messages tell the story: &quot;Phase 1: Core analysis pipeline, data store, CLI,&quot; followed by Phases 2, 3, 5, and 9 across the next twelve hours. The skipped phase numbers suggest I was working from a design document and combining or deferring sections as I went. The pace was possible because I wasn't writing the implementation. Claude was. I was specifying what to build, reviewing the output, and course-correcting.</p>
+          <p>I want to be precise about what &quot;built in a day&quot; means in this context. The specifications, the architecture, the decisions about what the project should do and how it should work: those took real thought. The implementation of those decisions, the code, the tests, the configuration: that's what Claude handled. I've described in previous articles how that division of labor works. On this project, it meant the gap between &quot;I know what I want&quot; and &quot;it exists and runs&quot; collapsed from weeks to hours.</p>
+          <p>But having a working pipeline on day one didn't mean the project was finished. It meant the project was ready to start learning what it needed to become.</p>
+          <h2>The Representation Problem</h2>
+          <p>Within the first week, I started building out the seed data: curated profiles of trans voices, organizations, community truths, and the misinformation tropes the platform would need to recognize. The initial catalog had about fifteen voice profiles. By February 12th, it had grown to include Indigenous and Two-Spirit voices, disabled trans voices, BIPOC perspectives, historical figures, and community elders and youth.</p>
+          <p>This expansion wasn't a checkbox exercise. Each voice profile represents a real person or perspective that the platform needs to present accurately and respectfully. Getting the representation right matters because the platform's credibility depends on it. If the voices it cites are narrow, the analysis it produces will be narrow too.</p>
+          <p>I built a skill called <code>/examine-bias</code> that audits the seed data for demographic gaps. It checks whether the voice catalog skews toward any particular demographic, whether certain intersectional identities are underrepresented, and whether the organizational profiles cover the full landscape. I ran it regularly as the data grew, and it consistently found gaps I hadn't noticed. The BIPOC voice expansion on February 12th came directly from a bias audit that showed the catalog was skewing toward white trans perspectives.</p>
+          <p>This is one of the things I've learned to value about working with Claude: you can build auditing tools for your own blind spots. The <code>/examine-bias</code> skill doesn't replace community review, and I wouldn't claim it catches everything. But it catches the things that are measurable, and it catches them consistently, which frees me to focus my attention on the things that require judgment.</p>
+          <p>During this same period, the project pivoted from web-only output to multi-output generation. The initial static site was joined by PDF reports (a full analysis report and a one-page summary) and audience-specific resource guides. This was the first sign that the project's scope was growing beyond what I'd initially planned. I had started with a website. The review system told me the website wasn't enough.</p>
+          <h2>The Sprint Compression</h2>
+          <p>On February 14th, something happened that still surprises me when I look at the commit log. The project ran through Sprints 1 through 7 in a single day. By the next day, it had reached Sprint 22.</p>
+          <p>Each sprint was a structured development cycle using the role-based review system I described in my second article. Five reviewer perspectives (steward, designer, editor, advocate, security) evaluated the codebase, a leader role synthesized their findings, and the resulting tasks were claimed and implemented by parallel agents. The sprint numbering is visible in the commit messages: &quot;Sprint 3: Security hardening,&quot; &quot;Sprint 5: CI/CD pipeline,&quot; &quot;Sprint 7: Site redesign.&quot;</p>
+          <p>Those two days produced: a review dashboard with API-based review actions, three audience-specific resource guides (for parents and teens, medical professionals, and legislators), a Lambda pipeline for serverless article processing, international representation expansion across the voice catalog, and security hardening including prompt sandboxing and content sanitization.</p>
+          <p>I don't want to present this as pure speed. Each sprint included review, testing, and validation. The pace was fast because the coordination infrastructure handled the logistics, but the decisions still required thought. Which audiences need dedicated resource guides? How should the review dashboard surface article quality issues? What does prompt sandboxing need to protect against in this specific threat model? Those questions took time to answer well, even when the implementation was fast.</p>
+          <p>By February 15th, the project had gone through twenty-two sprints, released ten versions (v0.2.0 through v0.11.0), and looked very different from the article analysis tool I'd started with eight days earlier.</p>
+          <h2>From Binary to Spectrum</h2>
+          <p>The most significant change in the project's evolution happened in late February, and it wasn't technical. It was conceptual.</p>
+          <p>The original pipeline had a binary screening step: is this article anti-trans? If yes, analyze it. If no, skip it. That binary gate reflected a defensive posture. The project existed to counter misinformation, so it only looked at content that contained misinformation.</p>
+          <p>On February 26th, I replaced the binary screening with a four-way stance classification: anti-trans, supportive, neutral, or mixed. Supportive articles got their own quality scoring system. The pipeline gate was refactored from a yes/no filter into a stance-based router that processed content differently depending on its orientation.</p>
+          <p>This changed what the project was for.</p>
+          <p>A platform that only analyzes opposition is inherently reactive. It defines itself by what it's against. A platform that also evaluates supportive content, that grades the quality of allyship, that tracks which arguments are effective and which are well-intentioned but counterproductive, is doing something more complete. It's mapping the entire landscape, not just the hostile territory.</p>
+          <p>The technical implementation was a refactor: new classification prompts, a <code>by_stance.json</code> index, updated pipeline routing, a <code>td backfill-stance</code> command to reclassify previously processed articles. But the decision to make the change came from sitting with a question that had been nagging me for weeks. If the platform only looks at what's wrong, does it inadvertently center the people doing harm? The multi-stance system was my answer. You can't understand opposition without also understanding what's worth supporting. And the people whose work is worth supporting deserve the same rigor of analysis.</p>
+          <h2>Following the Evidence</h2>
+          <p>In late February, the project expanded into territory I hadn't originally planned: legislation tracking.</p>
+          <p>The first commit in this direction added bill models and enums. Then came API clients for LegiScan and Congress.gov. Then state-level bill tracking. Then the pieces started connecting.</p>
+          <p>The trope-to-bill temporal correlation engine detects patterns between media narratives and legislative activity. When a particular misinformation trope spikes in media coverage and a related bill is introduced shortly after, the engine flags that temporal relationship. It doesn't claim causation. It maps timing.</p>
+          <p>The model bill text similarity detector uses TF-IDF to find where the same legislative language appears across states. When a bill introduced in Texas has substantially similar text to a bill introduced in Florida three months later, the detector surfaces that connection. This is a known pattern in US state legislation: organizations draft model bills and distribute them to sympathetic legislators in multiple states. The detector makes that pattern visible.</p>
+          <p>The organizational influence chain queries map relationships between advocacy organizations, the media content they produce or promote, the legislative efforts they support, and the model bills they draft. Again, the platform doesn't editorialize. It maps documented, public connections and lets readers follow the evidence.</p>
+          <p>By early March, a campaign tracking system was added to monitor coordinated ballot initiatives across states. The commit history shows this emerging from the legislation tracking work: once the platform could detect model bill propagation and organizational influence, recognizing coordinated multi-state campaigns was a natural extension.</p>
+          <h2>Contested Research</h2>
+          <p>On March 1st, I added a section that I'd been thinking about for a while: contested research tracking.</p>
+          <p>Certain reports and studies are cited repeatedly in anti-trans arguments despite having significant methodological problems or having been challenged by the broader scientific community. The platform currently has full detail pages for the Cass Review (commissioned by NHS England in 2024, criticized for cherry-picked data, excluded evidence, and inconsistent standards) and the 2025 HHS Gender Dysphoria Report (produced under the Trump administration, criticized for undisclosed conflicts of interest and political interference). Lisa Littman's 2018 &quot;rapid-onset gender dysphoria&quot; paper, which was corrected by its publisher after methodological criticism, is tracked through the platform's tropes and rebuttals system, with a dedicated detail page in progress.</p>
+          <p>The contested research section tracks these reports, documents the methodological criticisms from peer review and professional medical organizations, and maps their influence. Impact tracking shows how a single flawed report connects to specific legislation and policy decisions. The Cass Review's impact timeline, for example, traces its path from publication to NHS policy changes to citations in US state legislatures to insurance coverage denials.</p>
+          <p>This is one of the sections where the platform's editorial restraint matters most. The studies aren't labeled as &quot;wrong&quot; or &quot;debunked&quot; by the platform. The methodological criticisms come from published peer review, journal corrections, and statements by professional medical organizations. The platform's role is to make those criticisms findable and to map the connections between contested research and the policy decisions it influences.</p>
+          <h2>What the Architecture Reflects</h2>
+          <p>Looking at the commit history, certain patterns appear repeatedly. They're worth naming because they reveal what the project values, not just what it does.</p>
+          <p><strong>Attribution is structural, not decorative.</strong> The attribution credit system, added in Sprint 15, links every analysis back to the trans voices whose work informed it. This isn't a footnote or an acknowledgment page. It's a data relationship: when the platform publishes an analysis of a trope, the voices who have written about that trope are credited and linked. The credits page exists because the platform's entire purpose is to amplify existing work, and the architecture enforces that purpose.</p>
+          <p><strong>Accessibility was continuous, not a phase.</strong> The advocate reviewer role caught accessibility issues in every sprint, not in a dedicated accessibility sprint at the end. Content warnings were added in Sprint 10. Low-bandwidth usability was audited repeatedly. Screen reader support was checked alongside every template change. This happened because the advocate perspective was built into the review system from Sprint 1, so it was never possible for the project to accumulate accessibility debt unnoticed.</p>
+          <p><strong>Transparency about AI use is explicit.</strong> The platform uses AI to analyze content about a marginalized community. That demands transparency. The &quot;Our Approach to AI&quot; page documents exactly how AI is used in the pipeline, what decisions are automated, what decisions require human review, and what safeguards exist against the AI mischaracterizing content. The evidence standards page documents what counts as evidence and why. These pages exist because a platform that uses AI to analyze trans issues without disclosing how the AI works would be, at best, incomplete, and at worst, exploitative.</p>
+          <h2>What I Learned</h2>
+          <p>The project started as a content analysis tool. Twenty-six days and 1,059 commits later, it's a policy research platform that tracks media narratives, legislation, organizational influence, contested research, and coordinated campaigns across US jurisdictions.</p>
+          <p>That evolution wasn't planned in advance. It emerged from the review system. Each round of reviews found gaps between what the system could do and what the mission required. The steward found infrastructure gaps. The designer found UX gaps. The advocate found representation gaps. The legislative strategist found coverage gaps. The leader synthesized and prioritized, and the agents implemented. Sprint after sprint, the project grew toward what it needed to be rather than what I'd originally imagined.</p>
+          <p>I think there's something worth reflecting on here about how personal projects and professional work interact. I built this on my own time, with my own resources, because the subject matters to me. The workflow innovations, the template, the coordination patterns, the planning system: I developed all of those in the service of this project. The tools and the mission co-evolved. I didn't build a generic workflow and then apply it to trans rights. I hit real problems building something I cared about, and the solutions turned out to be general.</p>
+          <p>The hardest problems weren't technical. They were editorial. What stance should the platform take? How do you present contested research without editorializing? How do you center trans voices without speaking for them? How do you use AI to analyze content about a marginalized community responsibly? Those questions don't have clean answers, and the project's approach to them will keep evolving as it gets more feedback from the people it's meant to serve.</p>
+          <h2>Early Feedback and What's Next</h2>
+          <p>I've shared the platform with a small group of early reviewers in the trans community. Their feedback has been encouraging. They see value in a platform that maps the connections between media narratives, legislation, and organizational influence in one place, with proper attribution to the scholars and advocates whose work makes that mapping possible.</p>
+          <p>The public launch is coming soon. Before then, I want to make sure the platform has been reviewed by the communities it serves, not just by me and not just by the AI tools that helped build it. Community review is different from code review. It asks questions that no automated system can: Does this represent us accurately? Does this help? Does this cause harm we didn't anticipate?</p>
+          <p>If you're a trans person, ally, researcher, journalist, or advocate who would be interested in reviewing the platform before its public launch, I'd welcome your perspective. Reach out at <a href="mailto:jane@janewilkin.dev">jane@janewilkin.dev</a> to join the early reviewers group.</p>
+          <hr />
+          <p><em>This article was drafted with AI assistance and reviewed for factual accuracy.</em></p>
+          <p><em>If you're interested in working together, reach out at <a href="mailto:jane@janewilkin.dev">jane@janewilkin.dev</a>.</em></p>
+
+
+        </div>
+      </div>
+    </article>
+
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div class="site-footer__links">
+        <a href="https://www.linkedin.com/in/janewilkin/" target="_blank" rel="noopener">LinkedIn</a>
+        <a href="https://github.com/janewilkin" target="_blank" rel="noopener">GitHub</a>
+        <a href="mailto:jane@janewilkin.dev">Email</a>
+      </div>
+      <p>&copy; 2026 Jane Wilkin</p>
+    </div>
+  </footer>
+
+</body>
+</html>
