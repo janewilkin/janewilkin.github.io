@@ -8,25 +8,23 @@ description: >-
   patterns from human software teams.
 ---
 
-Three weeks into using Claude Code full-time, I stopped writing code.
+From the start, I committed to a prompting-only workflow with Claude Code. I wanted to learn to rely on the agent for its strengths, and see if I could use it to develop robust solutions without my coding intervention.
 
-Not entirely. But the balance shifted in a way I didn't expect. I was generating working implementations faster than I could decide what to build next. The code was fine. But I'd spend twenty minutes specifying something, Claude would produce it in seconds, and then I'd sit there looking at five other things that also needed specifying. The bottleneck had moved from implementation to planning, prioritization, and coordination.
+With Claude's help, I was generating features and enhancements within minutes, and the implementations were consistently better than I expected. Once I began to feel confident that Claude was accurately following my prompts and producing testable, well documented code, my next goal was to do more in parallel.
 
 This is happening to a lot of people right now.
 
-Wes McKinney, the creator of pandas and co-creator of Apache Arrow, [recently described a version of this shift](https://wesmckinney.com/blog/mythical-agent-month/). He's been building projects in Go, a language he wasn't previously proficient in, because AI agents made language fluency less important than fast feedback loops. His point isn't really about Go. It's that when agents handle the typing, what matters is how quickly you can validate their output and how well you can organize the work. The skills that become critical are architectural thinking, specification, and coordination.
+Wes McKinney, the creator of pandas and co-creator of Apache Arrow, [recently described a version of this shift](https://wesmckinney.com/blog/mythical-agent-month/). He's been building projects in Go, a language he wasn't previously proficient in, because AI agents made language fluency less important than the deployment deliverable. Go has advantages over Python in that it's typically simpler to deploy. His point isn't really about Go. It's that when agents handle the typing, what matters is how quickly you can validate their output and how well you can organize the work. The skills that become critical are architectural thinking, specification, and coordination.
 
 I see a wide spectrum across the industry right now. Some engineers aren't permitted to use AI tools at work. Others are going all in, publicly explaining how they're building entire projects with Claude. Most of us are somewhere in between, figuring out how to integrate these tools without losing the things that made us good at our jobs in the first place.
 
 ## Protecting the Exploratory Part
 
-For me, the thing I didn't want to lose was the exploratory part. The sessions where you spend an afternoon tracing through a system, building a mental model, understanding why something works the way it does. That's the part of the work I've always been drawn to most. When I first started using Claude Code, I felt protective of it. I worried that delegating implementation would shortcut the understanding.
+I wanted to enjoy the process of discovering how Claude worked firsthand, and let that experience directly inform the workflow I would eventually build. I didn't want to start off adopting other people's prompts and designs, because then I wouldn't really understand the trade-offs. I wanted to experiment with it myself, without bringing in too many opinions from others at first.
 
 So rather than using Claude at work, where I might feel pressured to move fast and skip the learning, I started using it extensively in personal projects. I gave myself permission to explore at my own pace, to figure out where the tool helped and where it got in the way, to develop my own workflow before anyone else's expectations shaped it.
 
-What I found was that the understanding didn't disappear. I wasn't tracing through code to figure out how to implement something. I was thinking about how the work should be organized, what depends on what, and how to express intent clearly enough that another entity could act on it.
-
-And once I got comfortable with that shift, I hit the next wall: I could get Claude to implement things simultaneously, but I needed to coordinate the work of multiple Claude agents. That's when the real problem got interesting.
+I could get Claude to implement things simultaneously, but I needed to coordinate the work of multiple Claude agents. That's when the real problem got interesting.
 
 ## The Coordination Problem
 
@@ -40,7 +38,7 @@ I could have reached for an external coordination system: a project board, a tas
 
 ## The Template
 
-What I've been iterating on is a [Claude project template](https://github.com/janewilkin/claude-project-template): a reusable configuration that you can drop into any Python project and immediately get a structured development environment for working with Claude Code. It's open source.
+What I've been iterating on is a [Claude project template](https://github.com/bismuthdigital/claude-project-template): a reusable configuration that you can drop into any project and immediately get a structured development environment for working with Claude Code. It was initially targeted toward Python projects, but none of it is Python-specific. It's open source.
 
 The template addresses three problems I kept running into:
 
@@ -86,7 +84,7 @@ The template ships with about eighty allow rules and a handful of deny rules. Ma
 
 The allow list covers the operations you perform constantly: editing Python files, running tests and linters, git operations, fetching documentation. The deny list blocks the things that are actually dangerous: reading secrets, destructive filesystem operations, piping untrusted remote content to a shell. Notably, `curl * | *` is denied because fetching arbitrary URLs and piping the result to bash is a well-known attack vector, but regular `curl` commands are permitted.
 
-The result is that Claude can work through a normal development session without interrupting you for permission, but it still can't read your credentials or delete your project.
+The result is that Claude can work through a normal development session interrupting you less often for permission, but it still can't read your credentials or delete your project.
 
 ## Skills: Specialized Capabilities
 
@@ -108,7 +106,7 @@ allowed-tools: Read, Glob, Grep, Edit, Bash(git *),
 ---
 ```
 
-The template includes 19 skills. Some are straightforward development tools: `/lint`, `/test`, `/review`, `/docs`. Some are workflow automation: `/ship`, `/version`, `/check` (which runs the full validation pipeline of lint, test, review, docs, and bash-review in sequence). Some are more unusual: `/comic` generates SVG explainer comics about the project, `/cost-estimate` analyzes API spending, and `/prompt-review` grades every AI prompt in the source code and suggests improvements.
+The template includes 19 skills. Some are straightforward development tools: `/lint`, `/test`, `/review`, `/docs`. Some are workflow automation: `/ship`, `/version`, `/check` (which runs the full validation pipeline of lint, test, review, docs, and bash-review in sequence). Some are more unusual: `/comic` generates SVG explainer comics about the project (admittedly, the comic was just a fun diversion, and actually doesn't produce great results yet), `/cost-estimate` analyzes API spending, and `/prompt-review` grades every AI prompt in the source code and suggests improvements.
 
 But the skills I want to focus on are the ones that solve the coordination problem.
 
@@ -151,44 +149,32 @@ Here's what it looks like when a sixth agent claims a task while five others are
 ═══════════════════════════════════════════════════
               TASKS CLAIMED
 ═══════════════════════════════════════════════════
-
 Worktree: dapper-drifting-melody
 Claimed: 1 task | Skipped: 0 (claimed) | In-flight: 0 (open PRs)
 Speculated version: 0.23.0 (minor)
-
 ───────────────────────────────────────────────────
 YOUR TASKS
 ───────────────────────────────────────────────────
-
 1. [legislative] Add optional legislation_refs field to ArticleRecord
    Section: Medium Priority
    Files: src/trans_disco/models.py, src/trans_disco/analysis/prompts.py
-
 ───────────────────────────────────────────────────
 CLAIMED BY OTHERS
 ───────────────────────────────────────────────────
-
 snappy-rolling-sifakis (v0.22.0):
   - [data] Add geographic tagging to ArticleRecord (3 min ago)
-
 snuggly-purring-quail (v0.21.1):
   - [designer] Add version history timeline to article review pages (3 min ago)
-
 bright-coalescing-riddle (v0.21.0):
   - [steward] Build data integrity validator (6 min ago)
-
 mossy-tickling-stroustrup (v0.21.0):
   - [steward] Build post-processing data cascade (6 min ago)
-
 calm-noodling-beacon (v0.21.0):
   - [data] Build precomputed index files for cross-reference queries (5 min ago)
-
 ───────────────────────────────────────────────────
 IN-FLIGHT (OPEN PRs)
 ───────────────────────────────────────────────────
-
   (none)
-
 ═══════════════════════════════════════════════════
 ```
 
@@ -204,32 +190,25 @@ The output looks like this:
 ═════════════════════════════════════════════
               SHIPPING CHANGES
 ═════════════════════════════════════════════
-
 Branch: festive-mendel → main
-
 CI PARITY
   ✓ ruff format clean
   ✓ ruff check clean
   ✓ mypy clean
-
 COMMIT
   ✓ Staged 5 files
   ✓ Committed: "Fix config validation edge case"
-
 VERSION
   ✓ Analyzed commits → MINOR increment
   ✓ Bumped version: 0.17.1 → 0.18.0
   ✓ Created tag: v0.18.0
-
 PULL REQUEST
   ✓ Created PR #42
   ✓ CI checks passed
   ✓ Squash merged into main
-
 SYNC LOCAL
   ✓ Pulled into /Users/jwilkin/code/project
   ✓ Local repo now at: abc1234
-
 ═════════════════════════════════════════════
                   SHIPPED!
 ═════════════════════════════════════════════
@@ -249,7 +228,7 @@ The fetch mechanism is deliberately resilient. It tries four authentication stra
 
 The template has been through about six minor versions in a few weeks. Each version came from hitting a real problem. The work queue safeguards (slug canonicalization, duplicate detection, orphan cleanup) exist because I watched agents claim the wrong tasks and ship conflicting versions. The docs-only detection in `/ship` exists because I got tired of waiting for CI on README changes. The layered worktree detection exists because an agent running from the main repo directory misidentified itself as "main" and tried to release another agent's claims.
 
-Every guardrail in the system came from a real failure mode. That's the same pattern I've seen in every operations system I've worked on. Experienced engineers do design for failures they haven't encountered yet -- but only when they recognize the class of failure from previous systems. Slug canonicalization, claim expiry, orphan detection: these aren't novel ideas. They're the same guards I'd have built into any distributed coordination system, because I've watched the equivalent problems play out in production environments over twenty years. What surprised me was the compression. Failure modes that would take a human team weeks to surface showed up in my first afternoon of running parallel agents.
+Every guardrail in the system came from a real failure mode. Canonical IDs, claim expiry, orphan detection: these are foundational concepts that show up in any workflow management system. I've seen them individually in different areas over time, and recognizing them here was straightforward. What surprised me was the compression. Failure modes that would take a human team weeks to surface showed up in my first afternoon of running parallel agents.
 
 The other thing I learned is that the skills and configuration files are doing something similar to what CLAUDE.md does for project context: they're compressing institutional knowledge into a format that an agent can consistently act on. When I write a skill definition, I'm encoding a process that I would otherwise have to explain from scratch every session. The `/ship` skill isn't just automation. It's a specification of how we ship code in this project, captured precisely enough that it works the same way every time.
 
@@ -267,7 +246,7 @@ I think we're at the beginning of something that mirrors what happened with dotf
 
 I'm starting to see the same thing happen with Claude Code configurations. People sharing their CLAUDE.md files, their permission rules, their skill definitions. Comparing approaches to agent coordination. Borrowing each other's hooks and workflows. The `.claude/` directory is becoming the new `~/.config/`: the place where you encode your development process.
 
-The template I've been building is my contribution to that conversation. It's opinionated, it reflects the way I work, and it will keep evolving as I learn more. If you're working with Claude Code and thinking about multi-agent workflows, the [repository is public](https://github.com/janewilkin/claude-project-template) and I'd be curious to hear what patterns you've found.
+The template I've been building is my contribution to that conversation. It's opinionated, it reflects the way I work, and it will keep evolving as I learn more. If you're working with Claude Code and thinking about multi-agent workflows, the [repository is public](https://github.com/bismuthdigital/claude-project-template) and I'd be curious to hear what patterns you've found.
 
 Last week I watched an agent misidentify its own worktree, try to release another agent's claims, and fail gracefully because of a guard I'd added two days earlier. I didn't write that guard because I anticipated the problem. I wrote it because I'd seen the same class of failure before, in a different system, with human operators. Twenty years of watching things go wrong in production turns out to be useful preparation for watching things go wrong with agents. The tools changed. The failure modes didn't.
 
