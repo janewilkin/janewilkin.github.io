@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Users Act in Predictably Chaotic Ways - Jane Wilkin</title>
+  <meta name="description" content="What retooling an automated testing environment taught me about user behavior, guardrails, and iterating on pain points.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+  <nav class="site-nav">
+    <div class="container container--wide">
+      <a href="/" class="site-nav__name">Jane Wilkin</a>
+      <ul class="site-nav__links">
+        <li><a href="/">Home</a></li>
+        <li><a href="/blog/" class="active">Writing</a></li>
+        <li><a href="/recommendations/">Recommendations</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <main>
+    
+    <article>
+      <div class="article-header">
+        <div class="container">
+          <a href="/blog/" class="article-header__back">&larr; Back to all articles</a>
+          <h1>Users Act in Predictably Chaotic Ways</h1>
+          <div class="article-header__meta">
+            <time>March 2026</time>
+            <span>&middot;</span>
+            <span>6 min read</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="article-body">
+        <div class="container">
+
+
+          <p><em>This is part of a series where I share my professional values and working style openly, so that future colleagues can get a sense of who I am before we ever work together.</em></p>
+          <h2>The Testing Problem</h2>
+          <p>One of the biggest challenges I witnessed in my career is testing. It sounds so simple: test it in a production-like environment before you release it. But what is production-like? Like production in which ways?</p>
+          <p>Usually that doesn't mean on the same scale as production workflows. Generally it means an environment that has all the necessary components of a production environment, without the scale. Another challenge is that even when you create your testing environment, many bugs, features, or behaviors are not apparent without the particular data sets configured, generated, or otherwise introduced by the customer through using the system.</p>
+          <p>Imagine the QA engineer, tasked with reviewing a feature of a distributed system, and verifying that it is correct before it goes out to production as a bug fix, hot fix, or part of a release. Distributed systems can fail in many often unpredictable ways. Determining the root cause can be quite time consuming, especially if there is a particular state of the system that needs to be introduced.</p>
+          <h2>The QA Bottleneck</h2>
+          <p>I have seen a QA team become bogged down in the maintenance of their testing environments. It can be a difficult situation for an organization to design around. Usually QA engineers are not hired for the same skill set as the developers, or the SREs that run the application in production. And yet, to do their work, it requires that they can quickly, accurately, and confidently ascertain the state of a complex system. If something isn't working, they need to be able to attribute the problem correctly to either the hosting platform, configuration values, the data layer, network, or a bug in the code. It's not a simple task.</p>
+          <p>I participated directly in the work that retooled an automated testing environment system, taking its reliance on infrastructure as code through Terraform a bit further. For context, this was roughly 2019-2022, and for many reasons, the workflow was not containerized.</p>
+          <p>Here are a few of the changes put in place during the redesign:</p>
+          <ul>
+          <li><strong>Keep all Terraform code and state.</strong> In a prior implementation, it was assumed that the IaC code could be treated as fire and forget. In practice, that was rarely the case.</li>
+          <li><strong>Implement provisioning through a Jenkins pipeline,</strong> allowing us to rely on Jenkins' workflow management tooling instead of writing our own.</li>
+          <li><strong>Contain each component in its own folder</strong> within a directory, making all components for the test environment easy to find within source control.</li>
+          <li><strong>Use simple, lightweight Bash scripts</strong> to handle templating of Terraform (this was before Terragrunt was in wide adoption) and supplying of variables that couldn't be templated.</li>
+          <li><strong>Use built-in retry logic</strong> to overcome transient network issues that could affect provisioning of any one of the 20+ components in the system.</li>
+          </ul>
+          <h2>Then the Users Showed Up</h2>
+          <p>Once we overcame the issue of establishing consistently built test environments, new issues arose:</p>
+          <ul>
+          <li>Users running too many test environments for the organization's cost tolerance</li>
+          <li>Users creating environments and leaving them running while idle</li>
+          <li>Users re-running environment creation with the exact same name and arguments</li>
+          <li>Users launching environments in the &quot;wrong&quot; region</li>
+          <li>Users not being able to track down who launched an environment or why, and whether or not it was safe to remove it</li>
+          </ul>
+          <p>At a first read, perhaps it looks like I am blaming the user, but that's not my goal. My goal is to point out that users act in predictably chaotic ways, because they have their own concerns and motivations. If the system allows them to do something, they will assume that it was an acceptable thing to do.</p>
+          <p>A system built without the proper guardrails to guide users within the bounds of expected behavior will quickly devolve into chaos. We all like to think that it won't happen, but lived experience as a technologist quickly teaches you otherwise.</p>
+          <h2>Iterating on the Pain Points</h2>
+          <p>Once the pain point of simply creating, running, and validating test environments was solved, we moved quickly to improving the reliability of the environments, and to addressing the user pain points that emerged.</p>
+          <p>Adding a &quot;created by&quot; field helped in many cases, but also introduced another user behavior anti-pattern: ask a colleague to launch the environment so that it has their name on it.</p>
+          <p>Adding a user-controllable name for the environment allowed people to follow the discipline of creating environments labeled with a ticket ID, but also enabled them to use a ticket ID that matched the pattern but didn't actually exist.</p>
+          <p>Each guardrail solved one problem and revealed the next. That's not a failure of the design process. That's the design process.</p>
+          <h2>Trust Over Controls</h2>
+          <p>Staying in touch with your users and building trust and interest in good working practice is the most effective way to move quickly. High-trust environments are conducive to speed. You can't guardrail your way to a well-functioning team. At some point, the system has to trust the people using it, and the people have to trust that the system was built with their needs in mind.</p>
+          <p>Conversely, if you have users who seem determined to find another way to bend the rules of the system, maybe they should join your QA team.</p>
+
+
+        </div>
+      </div>
+    </article>
+
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div class="site-footer__links">
+        <a href="https://www.linkedin.com/in/janewilkin/" target="_blank" rel="noopener">LinkedIn</a>
+        <a href="https://github.com/janewilkin" target="_blank" rel="noopener">GitHub</a>
+        <a href="mailto:jane@janewilkin.dev">Email</a>
+      </div>
+      <p>&copy; 2026 Jane Wilkin</p>
+    </div>
+  </footer>
+
+</body>
+</html>
