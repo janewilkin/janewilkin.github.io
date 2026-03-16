@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>What I Believe About the Code Change Process - Jane Wilkin</title>
+  <meta name="description" content="Principles for code changes, pull requests, and code review, drawn from two decades in software starting in financial services.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+  <nav class="site-nav">
+    <div class="container container--wide">
+      <a href="/" class="site-nav__name">Jane Wilkin</a>
+      <ul class="site-nav__links">
+        <li><a href="/">Home</a></li>
+        <li><a href="/blog/" class="active">Writing</a></li>
+        <li><a href="/recommendations/">Recommendations</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <main>
+    
+    <article>
+      <div class="article-header">
+        <div class="container">
+          <a href="/blog/" class="article-header__back">&larr; Back to all articles</a>
+          <h1>What I Believe About the Code Change Process</h1>
+          <div class="article-header__meta">
+            <time>March 2026</time>
+            <span>&middot;</span>
+            <span>5 min read</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="article-body">
+        <div class="container">
+
+
+          <p>Going through the process of evaluating and joining a new team of professionals is always fascinating. How do we determine that we're a good match for working together? How do we establish trust and alignment in our thinking, over such a short period of a few interviews?</p>
+          <p>For the next team that I join, I want to make it easier for us to say yes to working together, by sharing as openly as possible my thoughts, values, strategies, and work style preferences. This is the first in a series of posts on these topics.</p>
+          <h2>Principles</h2>
+          <p>Here are the principles that I've developed over the course of my career, which I think are essential for a healthy code change process.</p>
+          <p>Every code change should be provably correct. When a colleague is reviewing a pull request, it should be straightforward for them to check that the code change functions as expected. Pull requests should always include the way in which the code was determined to be correct -- the tests that were run, the behavior that was validated.</p>
+          <p>The documentation of the pull request should explain why the code change was made, and include the key facts that led to the implementation. The diff already shows what changed. The PR description is where you capture what prompted the change, what alternatives were considered, and why this approach was chosen.</p>
+          <p>This documentation is important for several reasons: knowledge sharing among colleagues, satisfying compliance requirements that all changes are reviewed before reaching production, and encapsulating the organizational knowledge and decision-making that led to the change. When someone revisits this code in six months, they should be able to understand not just the implementation, but the context it was built in.</p>
+          <h2>Where I Learned This</h2>
+          <p>My first encounter with a rigorous code documentation process was at my first employer after university. I was working in the financial software industry, where there is a need for accuracy, control, knowledge sharing, and even liability connected to the software development process.</p>
+          <p>Consider that a company produces release notes describing the updates to their platform. The client's team reviews those notes to assess the risk of taking the latest release. After reviewing and accepting the release, they deploy it to production. When the release is running in production, a problem is identified.</p>
+          <p>If that problem relates to a change that was discussed in the release notes, the customer impact still negatively affects their business and the client-vendor relationship. But the principles of trust in communication can still be maintained: the client was informed, and they made a risk-aware decision.</p>
+          <p>If however, the bug was in a change to a feature that was not described in the release notes, then the software company didn't fully inform the client of the risk. That erodes the trust that the client has put in the vendor, that all changes will be accurately described and reviewed. That kind of erosion is harder to recover from than a bug.</p>
+          <h2>The Documentation Workflow</h2>
+          <p>The technical writing process of producing release notes, changelogs, and other project documentation is part of a workflow. The start of that workflow begins in the bug report or enhancement request, or feature definition. The developer's contribution to the process -- documenting their change, the key design decisions, the areas they tested and how they tested them -- all of that information feeds directly into the documentation that customers and colleagues rely on.</p>
+          <p>Each step in this chain depends on the one before it. Skip the PR description, and the reviewer lacks context. Skip the reviewer's understanding, and the release notes are incomplete. Skip the release notes, and the customer can't assess risk. The discipline starts with the developer, at the moment of the commit.</p>
+          <h2>What Code Review Is For</h2>
+          <p>The code review process is about much more than gatekeeping production. Ensuring that safe, high-quality code is shipped consistently is one of the top priorities, but it's not the only one.</p>
+          <p>The code review process, ideally, is a chance for knowledge sharing, forming team norms, building rapport between individual contributors, and an opportunity for mentorship. The review should focus on understanding why a particular implementation was chosen by the contributor, raising questions and concerns that they may not have considered, and strengthening the solution with multiple perspectives from colleagues.</p>
+          <p>The code review process is not the place for bickering over formatting or code cleanliness. Those types of checks should be automated and applied to all changes uniformly and consistently, so that the humans in the process can focus on higher-order concerns.</p>
+
+
+        </div>
+      </div>
+    </article>
+
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div class="site-footer__links">
+        <a href="https://www.linkedin.com/in/janewilkin/" target="_blank" rel="noopener">LinkedIn</a>
+        <a href="https://github.com/janewilkin" target="_blank" rel="noopener">GitHub</a>
+        <a href="mailto:jane@janewilkin.dev">Email</a>
+      </div>
+      <p>&copy; 2026 Jane Wilkin</p>
+    </div>
+  </footer>
+
+</body>
+</html>
