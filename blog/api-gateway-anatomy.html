@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Eight Years Operating a Distributed Proxy - Jane Wilkin</title>
+  <meta name="description" content="Cache delays, brownfield systems, and a streaming product built without an offset. Lessons from eight years operating an API management platform.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+  <nav class="site-nav">
+    <div class="container container--wide">
+      <a href="/" class="site-nav__name">Jane Wilkin</a>
+      <ul class="site-nav__links">
+        <li><a href="/">Home</a></li>
+        <li><a href="/blog/" class="active">Writing</a></li>
+        <li><a href="/recommendations/">Recommendations</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <main>
+    
+    <article>
+      <div class="article-header">
+        <div class="container">
+          <a href="/blog/" class="article-header__back">&larr; Back to all articles</a>
+          <h1>Eight Years Operating a Distributed Proxy</h1>
+          <div class="article-header__meta">
+            <time>March 2026</time>
+            <span>&middot;</span>
+            <span>8 min read</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="article-body">
+        <div class="container">
+
+
+          <p><em>This is part of a series where I share my professional values and working style openly, so that future colleagues can get a sense of who I am before we ever work together.</em></p>
+          <p>I spent around eight years working on, maintaining, and operating an API management platform as part of an SRE team. The system functioned as a configurable network proxy service, similar to the core of what AWS API Gateway offers today, but it was invented before that product existed.</p>
+          <p>Here I would like to describe a few anti-patterns that I have seen play out first hand. I've anonymized the details, but described things in enough specificity to be relevant on a conceptual basis.</p>
+          <h2>The Architecture</h2>
+          <p>The system had a common architecture: a load balancer with workers behind it. The workers would read from a persistent data layer (an RDBMS) and a caching service composed of four separate in-memory cache pools, each holding a different slice of the configuration data that workers needed to handle requests. Every request could be handled in a variety of ways, each configurable to a fine grain, and all of that data needed to be available extremely quickly because the system was handling network requests in flight.</p>
+          <h2>The Stream Without an Offset</h2>
+          <p>The workers that handled requests also generated logs, and those logs were used as a data source for products delivered to customers. Customers wanted to run analytics on their traffic to track sales, understand user behavior, and measure system utilization.</p>
+          <p>Initially that data was provided in batch form. Later, the system was enhanced to provide a near-real-time stream of data, committing to an SLA of delivering every record within 60 seconds.</p>
+          <p>SRE was brought in at the end of the development cycle, with roughly 90 days before the contractual commitment to launch. When we reviewed the product description and plan, one of the first things I asked was: what happens if the client disconnects? One of the first principles of resilient distributed systems design is that the network is not reliable. Some people on my team were surprised the question hadn't already been addressed -- it was so basic that they'd assumed it had been handled. Others hadn't thought of it.</p>
+          <p>The product was built on a stream without an offset -- no recovery position. If the system was down for any reason at all, customers would have gaps in their data. Customers who built dashboards on this data stream would see those gaps, and their executives would see them too. Having even a limited window of recovery with an offset would have allowed required maintenance to occur without creating the kind of visibility that makes a customer's executive suite ask &quot;why is there a gap in the data?&quot;</p>
+          <p>The offset was never added. Customer satisfaction suffered because the gaps were visible at the executive level, and internal morale suffered because there was nothing the SRE team could do to correct the design decision after the fact.</p>
+          <h2>Maintaining a warm cache layer, with a delay</h2>
+          <p>My previous exposure to caching had been in the context of hosting a high-traffic news website, where we used a mix of CDN, full page caching, page component caching, and query caching. The design of having multiple caches for different purposes seemed sound from an availability standpoint, but all four cache pools were hosted on the same node. That took away some of the benefit. When concurrent connections to the cache became an issue, all pools were impacted at once.</p>
+          <p>The caches were populated by workers that would query the RDBMS on a schedule and load the results into the cache. This batch-based processing introduced a delay into the system that kept coming back to impact the user experience.</p>
+          <p>In practice, the delay looked like this: a customer would update their configuration in our application, but the change wouldn't start to affect application behavior until some time later. Sometimes that was minutes, if the delay was simply a batching issue. In some cases it was hours, if the issue was more nuanced.</p>
+          <p>All of this could have been avoided by combining cache-aside behaviors with the batch loading. I recognized that gap from my experience with web caching, where cache-aside processing was used extensively, and proposed it as an approach. Cache-aside would allow the system to check for fresh data at request time, falling back to the cache for performance but not relying solely on the batch schedule for correctness.</p>
+          <p>The complexity of the dataset being queried was such that it was difficult for any one engineer to understand. The algorithm for composing the data to be loaded into the caches was complex enough that people were afraid to adjust it, even though the performance of the query was becoming slower and slower over time as production data evolved in ways that people did not expect. The complexity was concentrated in a narrow domain, and knowledge sharing hadn't happened. That made the problem harder to solve, because the people closest to it were also the most resistant to outside input.</p>
+          <h2>When There's No Version Number</h2>
+          <p>One example of this: the deployed application had no single version number. Instead of choosing a package management solution to handle packaging and deployment, those processes had been implemented in a series of bespoke bash scripts. There was simply no version number that was maintained and discoverable. The best that engineering could give SRE at the time was the version number written to S3, or a collection of versions for many different components, queryable at runtime.</p>
+          <p>This is the kind of thing that seems almost unbelievable in retrospect, but it's a natural consequence of a system where deployment and maintenance weren't considered as first-class concerns during the design phase. It's also an example of why I care about these details when joining a new system -- because the absence of something as basic as a version number has downstream effects on every operational process that depends on knowing what's running in production.</p>
+          <h2>Brownfield Systems and the Benefit of Hindsight</h2>
+          <p>All of that complexity could have been designed differently in theory, but in practice, this was the system as-inherited. Coping with brownfield projects -- systems that have shown their age, systems that have lived long enough to display the faulty assumptions of the architects or engineers who designed them -- is a skill I had to learn through on-the-job experience, inheriting and working on systems that had been in operation for years. In the real world, everyone did their best with the information, skill, and time they had to solve the problem. We have the benefit of hindsight when examining system performance and reviewing their work.</p>
+          <p>Many times I have seen the lessons of good working practices solidified into experience by watching what happens when they are ignored. When deployment, maintenance, and repair are not considered at the start, it's easy to find oneself painted into a corner, forced to make tradeoffs that are less than ideal.</p>
+          <h2>What These Stories Have in Common</h2>
+          <p>The cache delay, the missing version number, and the stream without an offset are all examples of what happens when operational concerns aren't part of the design conversation early enough. The SRE team wasn't just operating the system -- we were continually advocating for the feedback loop between production behavior and engineering decisions. The pushback was often cultural rather than technical. There was a lingering &quot;throw it over the wall&quot; dynamic between engineering building a product and operations being expected to run it. It took a concerted effort to change that bias, to have the SRE team seen as collaborators on availability rather than a separate group with its own agenda.</p>
+
+
+        </div>
+      </div>
+    </article>
+
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div class="site-footer__links">
+        <a href="https://www.linkedin.com/in/janewilkin/" target="_blank" rel="noopener">LinkedIn</a>
+        <a href="https://github.com/janewilkin" target="_blank" rel="noopener">GitHub</a>
+        <a href="mailto:jane@janewilkin.dev">Email</a>
+      </div>
+      <p>&copy; 2026 Jane Wilkin</p>
+    </div>
+  </footer>
+
+</body>
+</html>
