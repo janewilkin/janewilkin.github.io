@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Failure Modes and Blast Radius - Jane Wilkin</title>
+  <meta name="description" content="A missing health check turned single-customer slowdowns into multi-customer outages. A cascading failure story from the SRE side of a distributed proxy system.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+  <nav class="site-nav">
+    <div class="container container--wide">
+      <a href="/" class="site-nav__name">Jane Wilkin</a>
+      <ul class="site-nav__links">
+        <li><a href="/">Home</a></li>
+        <li><a href="/blog/" class="active">Writing</a></li>
+        <li><a href="/recommendations/">Recommendations</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <main>
+    
+    <article>
+      <div class="article-header">
+        <div class="container">
+          <a href="/blog/" class="article-header__back">&larr; Back to all articles</a>
+          <h1>Failure Modes and Blast Radius</h1>
+          <div class="article-header__meta">
+            <time>March 2026</time>
+            <span>&middot;</span>
+            <span>6 min read</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="article-body">
+        <div class="container">
+
+
+          <p><em>This is part of a series where I share my professional values and working style openly, so that future colleagues can get a sense of who I am before we ever work together.</em></p>
+          <h2>Failure Modes Evolve with the System</h2>
+          <p>Failure modes and blast radius issues are often unexpected. It is common to discover new ones as systems evolve and change. Systems can change in a variety of ways:</p>
+          <ul>
+          <li>Increased utilization by customers</li>
+          <li>Growth of the data layer</li>
+          <li>Changes in components</li>
+          <li>Changes in the platform</li>
+          <li>New features</li>
+          <li>New usage patterns</li>
+          <li>Automated testing patterns</li>
+          </ul>
+          <p>It's unlikely that any team will be able to anticipate all the failure modes during system design, but it is possible to learn the patterns, and the ways in which system design can make detecting and dealing with those scenarios easier.</p>
+          <p>There's one example of a failure mode that I witnessed and grappled with that I'd like to describe, to illustrate the perspective I bring and the way that I reason about systems. This is an example of a noisy neighbor problem, over-utilization, and blast radius.</p>
+          <p>I'm going to leave out identifiable details from the story, but describe things in enough detail to be relevant on a principles basis.</p>
+          <h2>The System</h2>
+          <p>This system was composed in part of a series of load balancers routing traffic to pools of worker nodes. The worker nodes would route requests to customer backend systems, wait for their reply, and then send that response back to the traffic originator.</p>
+          <p>As each node handled many concurrent requests, the primary resource contention on the node was the network. Imagine this:</p>
+          <ul>
+          <li>A customer is pushing 10,000 QPS through a load balancer.</li>
+          <li>Those requests are distributed to the target group.</li>
+          <li>The number of concurrent requests in flight on a given node is a product of several factors: the request rate, the latency of handling the request on the worker, and the time the request spent at the customer backend system.</li>
+          <li>If the customer backend system is highly performant, this drives the total number of concurrent requests downward.</li>
+          <li>When a customer backend system slows down for any reason, the number of concurrent requests in flight increases if their traffic level stays the same.</li>
+          <li>Because the workers are limited in how many network connections they can maintain based on the constraints of the operating system, network performance, and available memory, customer backend slowdowns can trigger an availability issue when horizontal scaling cannot keep up with demand.</li>
+          </ul>
+          <h2>How the Failure Unfolded</h2>
+          <p>Here's how it would play out:</p>
+          <ol>
+          <li>A customer is running a high QPS rate through the system.</li>
+          <li>The customer backend system slows down.</li>
+          <li>The workers now have more requests in flight, and this shows up in network utilization metrics as climbing TCP TIME_WAIT sockets.</li>
+          <li>Once the workers hit their limit of total sockets in use, they start to serve HTTP 5XX responses to both the client system and the load balancer.</li>
+          <li>The lack of a robust health check on the worker allows it to continue receiving traffic from the load balancer, even while it is unable to service it.</li>
+          <li>That causes the DNS load balancing health checks to fail.</li>
+          <li>When those fail, the traffic fails over to the failover site, or in some cases a different geo-routed stack.</li>
+          <li>This can introduce the thundering herd problem, where suddenly a failover stack is receiving 10x traffic over the course of several minutes.</li>
+          <li>If this issue is happening on a target group shared by other customers, those customers' traffic also fails over.</li>
+          <li>At this point, we discover how robust the failover plans actually were, and whether or not the customers had prepared for the shift in traffic arriving from a particular stack.</li>
+          </ol>
+          <h2>The Root Cause and the Advocacy</h2>
+          <p>This was a huge pain point for the application, customers, and the engineering and SRE teams. As an SRE, I was on the incident response for these events, writing the RCA documents, leading the post-mortems, and discussing the issue with engineering stakeholders.</p>
+          <p>The reason that this failure mode occurred came back to a decision years in the past, when load balancer health checks were not seen as a valuable feature to implement robustly. That lack of an accurate health check led to so much customer pain over the years, and also prevented movement toward other resiliency improvements, such as auto-scaling.</p>
+          <p>Sometimes it can be difficult for engineers of today to remember why certain features were added to our distributed systems tooling. I have the benefit of seeing those lessons play out first hand, and the experience of advocating for prioritizing these features, even when a team has gotten by without them for years. In today's world of Kubernetes and containerized orchestration platforms, the lack of a health check may be hard to imagine, but imagining a health check that isn't well-implemented to truly detect its own ability to service a request is less difficult to imagine, since the implementation details affect the outcomes so dramatically.</p>
+
+
+        </div>
+      </div>
+    </article>
+
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div class="site-footer__links">
+        <a href="https://www.linkedin.com/in/janewilkin/" target="_blank" rel="noopener">LinkedIn</a>
+        <a href="https://github.com/janewilkin" target="_blank" rel="noopener">GitHub</a>
+        <a href="mailto:jane@janewilkin.dev">Email</a>
+      </div>
+      <p>&copy; 2026 Jane Wilkin</p>
+    </div>
+  </footer>
+
+</body>
+</html>
